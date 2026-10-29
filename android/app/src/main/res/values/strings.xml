@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FoodBridge</string>
+    <string name="title_activity_main">FoodBridge</string>
+    <string name="package_name">org.foodbridge.app</string>
+    <string name="custom_url_scheme">org.foodbridge.app</string>
+</resources>

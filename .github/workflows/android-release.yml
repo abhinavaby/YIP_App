@@ -1,0 +1,75 @@
+name: Android app
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Build web app and sync Capacitor
+        env:
+          VITE_API_BASE: ${{ vars.FOODBRIDGE_API_BASE }}
+        run: npm run android:sync
+
+      - name: Build installable debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Prepare APK
+        env:
+          RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('0.1.0-build.{0}', github.run_number) }}
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk "FoodBridge-Android-${RELEASE_VERSION}.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: foodbridge-android-apk
+          path: FoodBridge-Android-*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub release
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: FoodBridge Android ${{ github.ref_name }}
+          body: |
+            Install the APK on an Android device to preview the FoodBridge application.
+
+            This build uses Android's debug signing key for sideloading and testing. It is not a Play Store production release.
+
+            To connect the app to a deployed FoodBridge API, configure the repository Actions variable `FOODBRIDGE_API_BASE` before building. The value should be the HTTPS API origin, without the `/api` path.
+          prerelease: true
+          files: FoodBridge-Android-*.apk
