@@ -34,6 +34,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Install web dependencies
         run: npm ci
@@ -43,13 +45,17 @@ jobs:
           VITE_API_BASE: ${{ vars.FOODBRIDGE_API_BASE }}
         run: npm run android:sync
 
+      - name: Run Android unit tests
+        working-directory: android
+        run: ./gradlew --no-daemon testDebugUnitTest
+
       - name: Build installable debug APK
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
 
       - name: Prepare APK
         env:
-          RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('0.1.0-build.{0}', github.run_number) }}
+          RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('0.1.1-build.{0}', github.run_number) }}
         run: cp android/app/build/outputs/apk/debug/app-debug.apk "FoodBridge-Android-${RELEASE_VERSION}.apk"
 
       - name: Upload APK artifact

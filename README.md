@@ -70,8 +70,8 @@ The installable debug APK is written to `android/app/build/outputs/apk/debug/app
 GitHub Actions builds this APK on pushes, pull requests, and manual runs. Push a version tag to also create a prerelease with the APK attached:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 The artifact is debug-signed for sideloading and testing; it is not signed for Google Play. A production Play Store release needs a privately managed signing key and protected GitHub Actions secrets. Set the repository Actions variable `FOODBRIDGE_API_BASE` to the deployed HTTPS API origin (without `/api`) when building an app connected to a hosted backend. Never put database credentials or private keys in the frontend or repository.
